@@ -2,6 +2,7 @@ package com.blz.servlet;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.regex.Pattern;
 
 import javax.servlet.annotation.WebInitParam;
 import javax.servlet.annotation.WebServlet;
@@ -20,20 +21,45 @@ import javax.servlet.http.HttpServletResponse;
         }
 )
 public class LoginServlet extends HttpServlet {
-    @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        String user=request.getParameter("user");
-        String pwd=request.getParameter("pwd");
-        String userID=getServletConfig().getInitParameter("user");
-        String password=getServletConfig().getInitParameter("password");
-        if (userID.equals(user) && password.equals(pwd)) {
-            request.setAttribute("user",user);
-            request.getRequestDispatcher("LoginSuccess.jsp").forward(request,response);
-        }else {
-            RequestDispatcher rd=getServletContext().getRequestDispatcher("/login.html");
-            PrintWriter out=response.getWriter();
-            out.println("<font color=red>Either user name or password is wrong.</font>");
-            rd.include(request,response);
-        }
-    }
-}
+	 private static final String FIRST_NAME_PATTERN="^[A-Z]{1}[a-zA-Z]{2,}$";
+
+	    @Override
+	    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+	        String user=request.getParameter("user");
+	        boolean validateFirstName = validateFirstName(user);
+	        boolean checkFirstName = checkFirstName(request, response, validateFirstName);
+	        String pwd=request.getParameter("pwd");
+	        String userID=getServletConfig().getInitParameter("user");
+	        String password=getServletConfig().getInitParameter("password");
+	        if (checkFirstName==true) {
+	            if (userID.equals(user) && password.equals(pwd)) {
+	                request.setAttribute("user", user);
+	                request.getRequestDispatcher("LoginSuccess.jsp").forward(request, response);
+	            } else {
+	                RequestDispatcher rd = getServletContext().getRequestDispatcher("/login.jsp");
+	                PrintWriter out = response.getWriter();
+	                out.println("<font color=red>Either user name or password is Incorrect.</font>");
+	                rd.include(request, response);
+	            }
+	        }
+
+	    }
+
+	    private boolean checkFirstName(HttpServletRequest request, HttpServletResponse response, boolean validateFirstName)
+	            throws IOException, ServletException {
+	        if (validateFirstName==false){
+	            RequestDispatcher rd=getServletContext().getRequestDispatcher("/login.jsp");
+	            PrintWriter out=response.getWriter();
+	            out.println("<font color=red>user name is Incorrect</font>");
+	            rd.include(request,response);
+	            return false;
+	        }
+	        return true;
+	    }
+
+	    public boolean validateFirstName(String firstName) {
+	        Pattern check= Pattern.compile(FIRST_NAME_PATTERN);
+	        boolean value=check.matcher(firstName).matches();
+	        return value;
+	    }
+	}
